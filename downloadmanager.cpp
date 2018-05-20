@@ -42,7 +42,7 @@ void DownLoadManager::downloadFile(QString url , QString fileName)
     if (m_isStop)
     {
         m_isStop = false;
-        m_url = QUrl(url);
+        m_url = QUrl::fromUserInput(url);
 
         // 从url 中获取文件名，但不是都有效;
         // QFileInfo fileInfo(m_url.path());

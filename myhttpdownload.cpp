@@ -1,4 +1,7 @@
 #include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QMessageBox>
 #include "myhttpdownload.h"
 #include "downloadmanager.h"
 
@@ -12,6 +15,7 @@ MyHttpDownload::MyHttpDownload(QWidget *parent)
     : QWidget(parent)
     , m_downloadManager(NULL)
     , m_url("")
+    , m_defaultFileName("defaultFileName")
     , m_timeInterval(0)
     , m_currentDownload(0)
     , m_intervalDownload(0)
@@ -27,9 +31,11 @@ MyHttpDownload::~MyHttpDownload()
 void MyHttpDownload::initWindow()
 {
     ui.progressBar->setValue(0);
+    ui.dirLineEdit->setText(QDir::homePath());
     connect(ui.pButtonStart, SIGNAL(clicked()), this, SLOT(onStartDownload()));
     connect(ui.pButtonStop, SIGNAL(clicked()), this, SLOT(onStopDownload()));
     connect(ui.pButtonClose, SIGNAL(clicked()), this, SLOT(onCloseDownload()));
+    connect(ui.pButtonchoice, SIGNAL(clicked()), this, SLOT(onChoiceDir()));
     // 进度条设置样式;
     ui.progressBar->setStyleSheet("\
                 QProgressBar \
@@ -50,7 +56,38 @@ void MyHttpDownload::initWindow()
 void MyHttpDownload::onStartDownload()
 {
     // 从界面获取下载链接;
-    m_url = ui.downloadUrl->text();
+    m_url = ui.downloadUrl->text().trimmed();
+    if (m_url.isEmpty())
+    {
+        QMessageBox::critical(this,tr("Error"),tr("URL IS Empty"));
+        return;
+    }
+
+    const QUrl newUrl = QUrl::fromUserInput(m_url);
+    if (!newUrl.isValid()) {
+        QMessageBox::information(this, tr("Error"),
+                                 tr("Invalid URL: %1: %2").arg(m_url, newUrl.errorString()));
+        return;
+    }
+
+    QString fileName = newUrl.fileName();
+    if (fileName.isEmpty())
+        fileName = m_defaultFileName;
+
+    QString downloadDirectory = QDir::cleanPath(ui.dirLineEdit->text().trimmed());
+    if (downloadDirectory.isEmpty())
+    {
+        downloadDirectory = QDir::homePath();
+    }
+
+    bool useDirectory = !downloadDirectory.isEmpty() && QFileInfo(downloadDirectory).isDir();
+    if (useDirectory)
+        fileName.prepend(downloadDirectory + '/');
+    else {
+        QMessageBox::critical(this,tr("Error"),tr("Invalid Directory : %1").arg(downloadDirectory));
+        return;
+    }
+
     if (m_downloadManager == NULL)
     {
         m_downloadManager = new DownLoadManager(this);
@@ -66,7 +103,7 @@ void MyHttpDownload::onStartDownload()
         m_downloadManager->reset();
     }
     m_downloadManager->setDownInto(true);
-    m_downloadManager->downloadFile(m_url, "F:/navicat.rar");
+    m_downloadManager->downloadFile(m_url, fileName);
 	m_timeRecord.start();
 	m_timeInterval = 0;
     ui.labelStatus->setText(QString::fromLocal8Bit("正在下载"));
@@ -94,6 +131,16 @@ void MyHttpDownload::onCloseDownload()
     ui.labelStatus->setText(QString::fromLocal8Bit("关闭下载"));
     ui.labelCurrentDownload->setText("0 B");
     ui.labelFileSize->setText("0 B");
+}
+
+void MyHttpDownload::onChoiceDir()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                      "/home",
+                                                      QFileDialog::ShowDirsOnly
+                                                      | QFileDialog::DontResolveSymlinks);
+    if(dir.isEmpty()) dir = QDir::homePath();
+    ui.dirLineEdit->setText(dir);
 }
 
 // 更新下载进度;

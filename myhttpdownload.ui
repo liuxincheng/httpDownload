@@ -16,8 +16,8 @@
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>330</x>
-     <y>90</y>
+     <x>350</x>
+     <y>80</y>
      <width>101</width>
      <height>97</height>
     </rect>
@@ -35,7 +35,7 @@
        </size>
       </property>
       <property name="text">
-       <string>start</string>
+       <string>开始下载</string>
       </property>
      </widget>
     </item>
@@ -48,7 +48,7 @@
        </size>
       </property>
       <property name="text">
-       <string>stop</string>
+       <string>暂停下载</string>
       </property>
      </widget>
     </item>
@@ -61,74 +61,87 @@
        </size>
       </property>
       <property name="text">
-       <string>close</string>
+       <string>取消下载</string>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>40</y>
-     <width>274</width>
-     <height>201</height>
+     <x>41</x>
+     <y>23</y>
+     <width>281</width>
+     <height>231</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>下载链接：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1" colspan="7">
+     <widget class="QLineEdit" name="downloadUrl"/>
+    </item>
+    <item row="1" column="0" colspan="8">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="label_9">
+       <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>下载链接：</string>
+         <string>下载目录：</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="downloadUrl"/>
+       <widget class="QLineEdit" name="dirLineEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pButtonchoice">
+        <property name="text">
+         <string>选择目录</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLabel" name="label_8">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>下载状态：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelStatus">
-        <property name="text">
-         <string>无下载任务</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_8">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>下载状态：</string>
+      </property>
+     </widget>
     </item>
-    <item>
+    <item row="2" column="1" colspan="4">
+     <widget class="QLabel" name="labelStatus">
+      <property name="text">
+       <string>无下载任务</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5" colspan="2">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="3" column="0" colspan="8">
      <widget class="QProgressBar" name="progressBar">
       <property name="maximumSize">
        <size>
@@ -150,74 +163,67 @@
       </property>
      </widget>
     </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>下载速度：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelSpeed">
-        <property name="text">
-         <string>0 B/S</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>剩余时间：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelRemainTime">
-        <property name="text">
-         <string>0 S</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="4" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>下载速度：</string>
+      </property>
+     </widget>
     </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>当前下载大小：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelCurrentDownload">
-        <property name="text">
-         <string>0 B</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>文件大小：</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelFileSize">
-        <property name="text">
-         <string>0 B</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="4" column="1" colspan="2">
+     <widget class="QLabel" name="labelSpeed">
+      <property name="text">
+       <string>0 B/S</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3" colspan="3">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>剩余时间：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="6" colspan="2">
+     <widget class="QLabel" name="labelRemainTime">
+      <property name="text">
+       <string>0 S</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" colspan="2">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>当前下载大小：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2" colspan="2">
+     <widget class="QLabel" name="labelCurrentDownload">
+      <property name="text">
+       <string>0 B</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="4" colspan="3">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>文件大小：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="7">
+     <widget class="QLabel" name="labelFileSize">
+      <property name="text">
+       <string>0 B</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
   <zorder>layoutWidget</zorder>
   <zorder>verticalLayoutWidget</zorder>
+  <zorder>pButtonchoice</zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
