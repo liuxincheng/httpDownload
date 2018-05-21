@@ -1,7 +1,7 @@
+#include <QUrl>
 #include <QDebug>
-#include <QDir>
-#include <QFileDialog>
-#include <QMessageBox>
+#include <QtWidgets>
+#include <QtNetwork>
 #include "myhttpdownload.h"
 #include "downloadmanager.h"
 
@@ -15,7 +15,7 @@ MyHttpDownload::MyHttpDownload(QWidget *parent)
     : QWidget(parent)
     , m_downloadManager(NULL)
     , m_url("")
-    , m_defaultFileName("defaultFileName")
+    , m_fileName("")
     , m_timeInterval(0)
     , m_currentDownload(0)
     , m_intervalDownload(0)
@@ -26,16 +26,27 @@ MyHttpDownload::MyHttpDownload(QWidget *parent)
 
 MyHttpDownload::~MyHttpDownload()
 {
+    if(m_downloadManager)
+    {
+        delete m_downloadManager;
+        m_downloadManager = NULL;
+    }
 }
 
 void MyHttpDownload::initWindow()
 {
     ui.progressBar->setValue(0);
     ui.dirLineEdit->setText(QDir::homePath());
+    ui.downloadUrl->setClearButtonEnabled(true);
+    ui.pButtonStart->setEnabled(false);
+    ui.pButtonStop->setEnabled(false);
+    ui.pButtonClose->setEnabled(false);
+    ui.launchCheckBox->setChecked(true);
     connect(ui.pButtonStart, SIGNAL(clicked()), this, SLOT(onStartDownload()));
     connect(ui.pButtonStop, SIGNAL(clicked()), this, SLOT(onStopDownload()));
     connect(ui.pButtonClose, SIGNAL(clicked()), this, SLOT(onCloseDownload()));
     connect(ui.pButtonchoice, SIGNAL(clicked()), this, SLOT(onChoiceDir()));
+    connect(ui.downloadUrl, SIGNAL(textChanged(QString)), this, SLOT(enableDownloadButton()));
     // 进度条设置样式;
     ui.progressBar->setStyleSheet("\
                 QProgressBar \
@@ -57,11 +68,6 @@ void MyHttpDownload::onStartDownload()
 {
     // 从界面获取下载链接;
     m_url = ui.downloadUrl->text().trimmed();
-    if (m_url.isEmpty())
-    {
-        QMessageBox::critical(this,tr("Error"),tr("URL IS Empty"));
-        return;
-    }
 
     const QUrl newUrl = QUrl::fromUserInput(m_url);
     if (!newUrl.isValid()) {
@@ -70,9 +76,8 @@ void MyHttpDownload::onStartDownload()
         return;
     }
 
-    QString fileName = newUrl.fileName();
-    if (fileName.isEmpty())
-        fileName = m_defaultFileName;
+    m_fileName = newUrl.fileName();
+    if(m_fileName.isEmpty()) m_fileName = "default";
 
     QString downloadDirectory = QDir::cleanPath(ui.dirLineEdit->text().trimmed());
     if (downloadDirectory.isEmpty())
@@ -82,17 +87,22 @@ void MyHttpDownload::onStartDownload()
 
     bool useDirectory = !downloadDirectory.isEmpty() && QFileInfo(downloadDirectory).isDir();
     if (useDirectory)
-        fileName.prepend(downloadDirectory + '/');
+        m_fileName.prepend(downloadDirectory + '/');
     else {
         QMessageBox::critical(this,tr("Error"),tr("Invalid Directory : %1").arg(downloadDirectory));
         return;
     }
 
+    ui.pButtonStart->setEnabled(false);
+    ui.pButtonStop->setEnabled(true);
+    ui.pButtonClose->setEnabled(true);
+    if(!ui.md5_label->text().isEmpty()) ui.md5_label->setText("");
+
     if (m_downloadManager == NULL)
     {
         m_downloadManager = new DownLoadManager(this);
         connect(m_downloadManager , SIGNAL(signalDownloadProcess(qint64, qint64)), this, SLOT(onDownloadProcess(qint64, qint64)));
-        connect(m_downloadManager, SIGNAL(signalReplyFinished(int)), this, SLOT(onReplyFinished(int)));
+        connect(m_downloadManager, SIGNAL(signalReplyFinished(int,QString)), this, SLOT(onReplyFinished(int,QString)));
     }
 
     // 这里先获取到m_downloadManager中的url与当前的m_url 对比，
@@ -103,16 +113,18 @@ void MyHttpDownload::onStartDownload()
         m_downloadManager->reset();
     }
     m_downloadManager->setDownInto(true);
-    m_downloadManager->downloadFile(m_url, fileName);
+    m_downloadManager->downloadFile(m_url, m_fileName);
 	m_timeRecord.start();
 	m_timeInterval = 0;
-    ui.labelStatus->setText(QString::fromLocal8Bit("正在下载"));
+    ui.labelStatus->setText(QString::fromUtf8("正在下载"));
 }
 
 // 暂停下载;
 void MyHttpDownload::onStopDownload()
 {
-    ui.labelStatus->setText(QString::fromLocal8Bit("停止下载"));
+    ui.pButtonStop->setEnabled(false);
+    ui.pButtonStart->setEnabled(true);
+    ui.labelStatus->setText(QString::fromUtf8("停止下载"));
     if (m_downloadManager != NULL)
     {
         m_downloadManager->stopDownload();
@@ -124,11 +136,13 @@ void MyHttpDownload::onStopDownload()
 // 关闭下载;
 void MyHttpDownload::onCloseDownload()
 {
+    ui.pButtonClose->setEnabled(false);
+    ui.pButtonStop->setEnabled(false);
     m_downloadManager->closeDownload();
     ui.progressBar->setValue(0);
     ui.labelSpeed->setText("0 KB/S");
     ui.labelRemainTime->setText("0s");
-    ui.labelStatus->setText(QString::fromLocal8Bit("关闭下载"));
+    ui.labelStatus->setText(QString::fromUtf8("关闭下载"));
     ui.labelCurrentDownload->setText("0 B");
     ui.labelFileSize->setText("0 B");
 }
@@ -141,6 +155,11 @@ void MyHttpDownload::onChoiceDir()
                                                       | QFileDialog::DontResolveSymlinks);
     if(dir.isEmpty()) dir = QDir::homePath();
     ui.dirLineEdit->setText(dir);
+}
+
+void MyHttpDownload::enableDownloadButton()
+{
+    ui.pButtonStart->setEnabled(!ui.downloadUrl->text().isEmpty());
 }
 
 // 更新下载进度;
@@ -174,7 +193,7 @@ void MyHttpDownload::onDownloadProcess(qint64 bytesReceived, qint64 bytesTotal)
 }
 
 // 下载完成;
-void MyHttpDownload::onReplyFinished(int statusCode)
+void MyHttpDownload::onReplyFinished(int statusCode, QString strmd5)
 {
     /*由于onDownloadProcess中每0.3秒跟新一次 导致已下载文件大小如果刚好在每次的0.3秒内下载完成导
      致文件下载完毕后和文件总大小不同*/
@@ -185,12 +204,20 @@ void MyHttpDownload::onReplyFinished(int statusCode)
         qDebug() << "Download Success";
         ui.labelSpeed->setText("0 KB/S");
         ui.labelRemainTime->setText("0s");
-        ui.labelStatus->setText(QString::fromLocal8Bit("下载完成"));
+        ui.labelStatus->setText(QString::fromUtf8("下载完成"));
     }
     else
     {
         qDebug() << "Download Failed";
     }
+
+    ui.pButtonStop->setEnabled(false);
+    ui.pButtonClose->setEnabled(false);
+    ui.pButtonStart->setEnabled(true);
+    ui.md5_label->setText(strmd5);
+
+    if (ui.launchCheckBox->isChecked())
+        QDesktopServices::openUrl(QUrl::fromLocalFile(m_fileName));
 }
 
 // 转换单位;

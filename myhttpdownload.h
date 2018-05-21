@@ -27,15 +27,16 @@ private slots:
     void onStopDownload();
     void onCloseDownload();
     void onChoiceDir();
+    void enableDownloadButton();
 
     void onDownloadProcess(qint64 bytesReceived, qint64 bytesTotal);
-    void onReplyFinished(int);
+    void onReplyFinished(int,QString);
 
 private:
     Ui::MyHttpDownloadClass ui;
 
     QString m_url;
-    QString m_defaultFileName;
+    QString m_fileName;
     DownLoadManager* m_downloadManager;
     uint m_timeInterval;
     qint64 m_currentDownload;

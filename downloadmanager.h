@@ -22,10 +22,11 @@ public:
 private:
     void stopWork();
     void removeFile(QString fileName);
+    QString getfilemd5(QString fileName);
 
 signals:
     void signalDownloadProcess(qint64, qint64);
-    void signalReplyFinished(int);
+    void signalReplyFinished(int,QString);
     void signalDownloadError();
 private slots:
     void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);

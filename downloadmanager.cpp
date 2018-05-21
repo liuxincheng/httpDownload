@@ -35,6 +35,19 @@ QString DownLoadManager::getDownloadUrl()
     return m_url.toString();
 }
 
+QString DownLoadManager::getfilemd5(QString fileName)
+{
+    QFile file(fileName);
+    QByteArray m_fileBuffer;
+    QByteArray strmd5;
+    if (!file.isOpen() && file.open(QIODevice::ReadOnly)) {
+        m_fileBuffer = file.readAll();
+        strmd5 = QCryptographicHash::hash(m_fileBuffer,QCryptographicHash::Md5).toHex();
+        file.close();
+    }
+    return QString(strmd5);
+}
+
 // 开始下载文件;
 void DownLoadManager::downloadFile(QString url , QString fileName)
 {
@@ -110,7 +123,7 @@ void DownLoadManager::onFinished()
 {
     m_isStop = true;
     QVariant statusCode = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-
+    QString strmd5;
     if (m_reply->error() == QNetworkReply::NoError)
     {
         // 重命名临时文件;
@@ -122,6 +135,8 @@ void DownLoadManager::onFinished()
             QFileInfo realfile(realName);
             if(realfile.exists()) QFile::remove(realName);
             QFile::rename(m_fileName, realName);
+
+            strmd5 = getfilemd5(realName);
         }
     }
     else
@@ -133,7 +148,7 @@ void DownLoadManager::onFinished()
     reset();
     stopWork();
 
-    emit signalReplyFinished(statusCode.toInt());
+    emit signalReplyFinished(statusCode.toInt(),strmd5);
 }
 
 // 下载过程中出现错误，关闭下载，并上报错误，这里未上报错误类型，可自己定义进行上报;
